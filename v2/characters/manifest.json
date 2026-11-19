@@ -1,0 +1,44 @@
+{
+  "lanxin": {
+    "layers": {
+      "body": "lanxin/body.webp"
+    },
+    "full": "lanxin/full.webp",
+    "static": true
+  },
+  "xueju": {
+    "layers": {
+      "body": "xueju/body.webp"
+    },
+    "full": "xueju/full.webp",
+    "static": true
+  },
+  "meiying": {
+    "layers": {
+      "body": "meiying/body.webp"
+    },
+    "full": "meiying/full.webp",
+    "static": true
+  },
+  "dongdong": {
+    "layers": {
+      "body": "dongdong/body.webp"
+    },
+    "full": "dongdong/full.webp",
+    "static": true
+  },
+  "qinglan": {
+    "layers": {
+      "body": "qinglan/body.webp"
+    },
+    "full": "qinglan/full.webp",
+    "static": true
+  },
+  "songfeng": {
+    "layers": {
+      "body": "songfeng/body.webp"
+    },
+    "full": "songfeng/full.webp",
+    "static": true
+  }
+}

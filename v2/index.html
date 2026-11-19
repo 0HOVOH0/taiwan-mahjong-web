@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-Hant" data-qz-boot="custom">
+<head>
+  <meta charset="UTF-8">
+  <script src="../web-shim.js"></script>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#141c1a">
+  <meta name="description" content="青竹十六張：台灣十六張麻將練習牌桌。自己出牌，比較 AI 建議，讀懂每一手。">
+  <title>青竹十六張｜AI 麻將練習桌</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <script type="module" crossorigin src="./assets/index-CpV6DnHC.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-C7aHkiDs.css">
+</head>
+<body>
+<div id="app" class="app">
+  <div id="board" class="board">
+    <canvas id="scene" class="scene" aria-hidden="true"></canvas>
+
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="青竹十六張"><span class="seal">竹</span><span class="brand-name">青竹<small>十六張</small></span></a>
+      <span id="mode-tag" class="mode-tag">本機練習</span>
+      <nav class="top-actions" aria-label="牌桌選單">
+        <button id="btn-menu" class="pill" type="button">主選單</button>
+        <button id="btn-new" class="pill wide-only" type="button">新的一局</button>
+        <button id="btn-study" class="pill wide-only" type="button">牌局研究室</button>
+        <button id="btn-rules" class="pill wide-only" type="button">玩法與數據</button>
+        <button id="btn-settings" class="icon-btn" type="button" aria-label="設定" aria-haspopup="dialog">⚙</button>
+      </nav>
+    </header>
+
+    <div id="plates" class="plates"></div>
+    <div id="fx" class="fx-layer" aria-hidden="true"></div>
+
+    <button id="ticker" class="ticker" type="button" aria-expanded="false" aria-controls="event-log"><span id="ticker-text">一位玩家，三位 AI 陪練</span><span class="ticker-more">紀錄</span></button>
+    <ol id="event-log" class="event-log" hidden aria-label="最近事件"></ol>
+    <div id="reaction" class="reaction-callout" aria-live="polite"></div>
+
+    <section id="tray" class="tray" aria-label="操作">
+      <div id="hand-tip" class="hand-tip">從「開始一局」入座</div>
+      <div class="decision-bar">
+        <div id="calls" class="call-bar"></div>
+        <button id="hint-button" class="hint-button" type="button" aria-controls="coach" aria-expanded="false">AI 提示</button>
+        <button id="confirm" class="confirm" type="button" disabled>請先開始牌局</button>
+      </div>
+    </section>
+
+    <aside id="coach" class="coach" aria-label="AI 牌況分析">
+      <div class="coach-top">
+        <div><span class="eyebrow">TABLE COMPANION</span><h2>一起讀牌</h2></div>
+        <span id="model-badge" class="model-badge">AI 教練</span>
+        <button id="coach-close" class="icon-btn" type="button" aria-label="收起 AI 提示">✕</button>
+      </div>
+      <div id="coach-content" class="coach-content"></div>
+      <details class="metric-note">
+        <summary>這些數字代表什麼？</summary>
+        <p>「模型偏好」是 AI 在合法動作間的選擇權重，不是勝率。「進張先驗」假設未見牌等可能（包含對手暗牌與保留牌），不是實戰胡牌率。「公開牌況危險分數」是未校準的啟發式分數，不是放槍機率。</p>
+        <p>鍵盤：← → 選牌，Enter 確認，H 開關提示，Space 略過動畫。</p>
+      </details>
+    </aside>
+    <div id="sheet-backdrop" class="sheet-backdrop" hidden></div>
+
+    <div id="result" class="result-overlay" hidden></div>
+    <div id="start" class="start-overlay" hidden></div>
+
+    <div id="boot-screen" class="boot-screen">
+      <div class="boot-card">
+        <div class="boot-seal">竹</div>
+        <div class="boot-title">青竹十六張</div>
+        <div class="boot-bar"><i id="boot-fill"></i></div>
+        <p id="boot-text" class="boot-text">準備牌桌…</p>
+        <p id="boot-note" class="boot-note" hidden>第一次開啟約下載 15 MB，之後會快很多。<br>牌局與 AI 都在你的瀏覽器裡運算，不會上傳。</p>
+      </div>
+    </div>
+  </div>
+
+  <section id="a11y" class="sr-only" aria-label="牌桌文字版">
+    <h2>牌桌文字版</h2>
+    <div id="a11y-table"></div>
+    <div id="a11y-hand" role="listbox" aria-label="你的手牌" aria-orientation="horizontal"></div>
+  </section>
+  <div id="status" class="status-line" role="status" aria-live="polite">準備牌桌中…</div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</div>
+
+<dialog id="dlg-settings" class="dialog" aria-labelledby="settings-title"></dialog>
+<dialog id="dlg-rules" class="dialog" aria-labelledby="rules-title">
+  <div class="dialog-top"><h2 id="rules-title">一局一練，讀懂每一手</h2><button class="icon-btn close-dialog" type="button" aria-label="關閉">✕</button></div>
+  <div class="prose">
+    <p>這是十六張台灣麻將單局練習桌。開局前先從六位角色（蘭心、雪菊、梅影、東東、晴嵐、松風）選一位當自己，再從其餘五位抽出三位對手，包含吃、碰、槓、補花、聽牌和胡牌，依專案固定的規則引擎結算。角色的名字與個性只影響台詞和表情，實際都由同一套規則教師出牌，換人不會改變對手強度。</p>
+    <p><strong>操作：</strong>點一下手牌預覽，再點一次同一張或按「確認」才會出牌。吃、碰、槓、胡、聽、過在手牌上方的按鈕選擇。剛摸進的牌放在最右邊、稍微隔開。</p>
+    <p><strong>AI 建議：</strong>使用已驗證可載入的 V4.2 BC 模型；模型無法載入時，會明確顯示「規則教師」。開啟「先自己想」時，出牌前不顯示建議，送出後才揭曉。</p>
+    <p><strong>數字的意思：</strong>長條是模型偏好，不是勝率；進張機率是假設未見牌等可能的先驗，不是實戰胡牌率；危險分數是未校準的啟發式分數，不是放槍機率。</p>
+    <p><strong>結算亮牌：</strong>本局結束後才會公開四家手牌與台數明細。下載的公開對局紀錄只包含當時看得到的資訊，不含亮牌。</p>
+    <p><strong>舊版介面：</strong>新介面驗收前，舊版仍可從 <a href="../classic/">舊版牌桌</a> 開啟。</p>
+  </div>
+</dialog>
+<dialog id="dlg-new" class="dialog small" aria-labelledby="new-title">
+  <div class="dialog-top"><h2 id="new-title">另開一局？</h2></div>
+  <p>目前這局尚未結束。需要保留時，可先在「牌局研究室」下載公開紀錄。</p>
+  <div class="dialog-actions"><button class="pill close-dialog" type="button">繼續這局</button><button id="btn-replace" class="pill primary" type="button">開始新的一局</button></div>
+</dialog>
+<dialog id="dlg-study" class="dialog wide" aria-labelledby="study-title"></dialog>
+</body>
+</html>

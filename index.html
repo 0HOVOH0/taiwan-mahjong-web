@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#3a2414">
+  <meta name="description" content="十六張台灣麻將練習桌：自行出牌、比較 AI 建議，讀懂每一手。">
+  <title>青竹・十六張｜AI 麻將練習桌</title>
+  <link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./web.css"><script defer src="./web-shim.js"></script><script defer src="./app.js"></script><script defer src="./study.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="./" aria-label="青竹十六張首頁"><span class="seal">竹</span><span>青竹<span class="brand-sub">十六張 · AI 麻將練習桌</span></span></a>
+  <div class="header-actions">
+    <span class="local-tag">本機練習</span>
+    <button id="study" class="quiet wide-only">牌局研究室</button><button id="rules" class="quiet wide-only">玩法與數據</button><button id="replay" class="quiet wide-only" disabled>對局回顧</button>
+    <button id="menu-button" class="quiet menu-button" aria-haspopup="true" aria-expanded="false" aria-controls="menu">⋯<span class="sr-only">選單</span></button>
+  </div>
+  <div id="menu" class="menu" role="menu" hidden>
+    <div class="narrow-only land-only menu-seat"><label for="menu-seat">座位</label><select id="menu-seat"><option value="0">東位</option><option value="1">南位</option><option value="2">西位</option><option value="3">北位</option></select></div>
+    <button class="narrow-only land-only" role="menuitem" data-proxy="new-game">新的一局</button>
+    <button class="narrow-only" role="menuitem" data-proxy="study">牌局研究室</button>
+    <button class="narrow-only" role="menuitem" data-proxy="rules">玩法與數據</button>
+    <button class="narrow-only" role="menuitem" data-proxy="replay">對局回顧</button>
+    <label class="toggle"><input type="checkbox" id="opt-think"><span>先自己想<small>出牌前隱藏 AI 建議，送出後才揭曉</small></span></label>
+    <label class="toggle"><input type="checkbox" id="opt-autoready"><span>聽牌後自動摸打<small>只剩「打出摸到的牌」時自動送出</small></span></label>
+    <label class="toggle"><input type="checkbox" id="opt-fx" checked><span>吃碰槓特效</span></label>
+    <div class="menu-seat"><label for="opt-dwell">他家出牌停留</label><select id="opt-dwell"><option value="0">不停留</option><option value="800">0.8 秒</option><option value="1500">1.5 秒</option><option value="2500">2.5 秒</option></select></div>
+  </div>
+</header>
+<main class="workspace">
+  <section class="play-area" aria-label="麻將牌桌">
+    <div class="table-toolbar">
+      <div><span class="eyebrow">TAIWAN MAHJONG</span><h1>每一手，都有你的想法。</h1></div>
+      <div class="new-controls"><label for="seat">座位</label><select id="seat"><option value="0">東位</option><option value="1">南位</option><option value="2">西位</option><option value="3">北位</option></select><button id="new-game" class="primary">開始一局</button></div>
+    </div>
+    <div id="stage" class="stage">
+      <div id="board" class="board">
+        <div class="rim"></div>
+        <button id="ticker" class="ticker" aria-expanded="false" aria-controls="event-log"><span id="ticker-text">一位玩家，三位 AI 陪練</span><span class="ticker-more">紀錄</span></button>
+        <ol id="event-log" class="event-log" hidden aria-label="最近事件"></ol>
+        <div id="seat-top" class="seat top"></div>
+        <div id="seat-left" class="seat left"></div>
+        <div id="seat-right" class="seat right"></div>
+        <div id="river-top" class="pond top"></div>
+        <div id="river-left" class="pond left"></div>
+        <div id="river-right" class="pond right"></div>
+        <div id="river-bottom" class="pond bottom"></div>
+        <div class="center-box" aria-live="polite">
+          <div id="compass" class="compass-ring"></div>
+          <div class="center-core"><span id="round-label" class="round-label">東風局</span><strong id="wall-count" class="wall-count">144</strong><span class="wall-unit">張可摸</span><span id="table-status" class="table-status">準備中</span></div>
+        </div>
+        <div id="reaction" class="reaction-callout"></div>
+        <div id="plate-left" class="plate p-left"></div>
+        <div id="plate-top" class="plate p-top"></div>
+        <div id="plate-right" class="plate p-right"></div>
+        <div id="plate-bottom" class="plate p-bottom"></div>
+        <div id="fx" class="fx-layer" aria-hidden="true"></div>
+        <div id="result-overlay" class="result-overlay" hidden></div>
+      </div>
+      <section class="tray" aria-label="你的手牌">
+        <div class="tray-head">
+          <div id="own-melds" class="own-melds" aria-label="你的副露與花牌"></div>
+          <span id="hand-tip" class="hand-tip">從「開始一局」入座</span>
+        </div>
+        <div id="hand" class="hand-row" role="listbox" aria-label="手牌" aria-orientation="horizontal"><div class="empty-hand">慢慢看牌，自己決定。AI 會陪你一起想。</div></div>
+        <div class="decision-bar">
+          <div id="special-actions" class="call-bar"></div>
+          <button id="hint-button" class="hint-button" type="button" aria-controls="coach" aria-expanded="false">AI 提示</button>
+          <button id="confirm" class="confirm" disabled>請先開始牌局</button>
+        </div>
+      </section>
+    </div>
+    <div id="status" role="status" aria-live="polite" class="status-line">準備牌桌中…</div>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  </section>
+  <aside id="coach" class="coach" aria-label="AI 牌況分析">
+    <button id="coach-close" class="coach-close quiet" type="button" aria-label="收起 AI 提示">收起 ✕</button>
+    <div class="coach-top"><div><span class="eyebrow">YOUR TABLE COMPANION</span><h2>一起讀牌</h2></div><span id="model-badge" class="model-badge">AI 教練</span></div>
+    <div id="coach-content"><div class="coach-empty"><div class="empty-symbol">發</div><h3>建議交給 AI，選擇留給你。</h3><p>選一張牌，查看出牌後的向聽數、進張與公開牌況危險分數。</p><ol><li>開始一局，三位 AI 自動陪練。</li><li>點一下手牌預覽，再點一次或按確認出牌。</li><li>吃、碰、槓、胡會出現在手牌上方。</li></ol></div></div>
+    <details class="metric-note"><summary>這些數字代表什麼？</summary><p>進張機率是未見牌等可能的抽樣先驗，未見牌也包含對手暗牌與保留牌。四抽估計假設進張集合固定、無放回抽樣。</p><p>「模型偏好」是 AI 在合法動作間的選擇權重；「危險分數」是啟發式分數。兩者都不是胡牌率或放槍率。實戰勝率尚未校準。</p><p>鍵盤：← → 選牌，Enter 確認，H 開關提示。</p></details>
+  </aside>
+  <div id="sheet-backdrop" class="sheet-backdrop" hidden></div>
+</main>
+<footer>公開牌況分析 · 隱藏資訊隔離 <span>台灣十六張 · 單局練習版</span></footer>
+<dialog id="rules-dialog"><div class="dialog-top"><h2>一局一練，讀懂每一手。</h2><button class="close-dialog quiet" aria-label="關閉說明">關閉 ✕</button></div><div class="prose"><p>這是十六張台灣麻將單局練習桌。一位玩家對三位規則 AI，包含吃、碰、槓、補花、聽牌和胡牌；依目前專案的固定規則結算。</p><p><strong>操作：</strong>點一下手牌預覽，再點一次同一張、或按確認，才會出牌。吃碰槓、過、胡牌在手牌上方的按鈕選擇。剛摸進的牌放在最右邊。宣告聽牌與普通出牌分開保留，宣告後需遵守引擎的聽牌限制。</p><p><strong>AI 建議：</strong>使用已驗證可載入的 V4.2 BC 模型；模型無法載入時，會明確顯示規則教師。對手使用規則教師。開啟「先自己想」時，出牌前不顯示建議，送出後才告訴你 AI 會怎麼選。</p><p><strong>向聽數：</strong>0 代表聽牌，數字越小越接近完成牌型。進張是能改善牌型的未見牌，不保證能從剩餘牌牆摸到。吃碰後的分析以教師建議的後續棄牌為條件；槓牌則是補牌前的估計。</p><p><strong>版本範圍：</strong>目前可完整玩單局、比較建議及回顧決策；連莊整圈賽制、多人連線與經校準的實戰胡牌／放槍率尚未提供。</p></div></dialog>
+<dialog id="replay-dialog"><div class="dialog-top"><h2>回看你的選擇</h2><button class="close-dialog quiet" aria-label="關閉回顧">關閉 ✕</button></div><div class="replay-controls"><button id="prev-step" class="quiet">← 上一步</button><span id="replay-index"></span><button id="next-step" class="quiet">下一步 →</button><button id="download" class="quiet">下載公開紀錄</button></div><div id="replay-content"></div></dialog>
+<dialog id="new-dialog"><div class="dialog-top"><h2>另開一局？</h2></div><p>目前這局尚未結束。需要保留時，可先在「對局回顧」下載紀錄。</p><div class="dialog-actions"><button class="close-dialog quiet">繼續這局</button><button id="replace-game" class="primary">開始新的一局</button></div></dialog>
+<dialog id="study-dialog" class="wide-dialog">
+  <div class="dialog-top"><div><span class="eyebrow">REVIEW & EXPLORE</span><h2>帶著一手牌，慢慢想。</h2></div><button class="close-dialog quiet" aria-label="關閉研究室">關閉 ✕</button></div>
+  <div class="study-import"><div><strong>重看一局</strong><p class="muted">載入之前下載的公開紀錄，逐步比較當時的選擇與建議。</p></div><button id="import-replay" class="quiet">載入公開紀錄</button><button id="example-replay" class="quiet">開啟範例牌局</button><input id="replay-file" type="file" accept=".json,application/json" hidden></div>
+  <details class="metric-note"><summary>本局的機率研究（實驗性）</summary><p class="muted">以獨立模擬資料估計：如果從目前局面起持續依照 BC 建議出牌，本局有多大機會胡牌。預測仍有誤差，不適合拿來比較你任選的兩張牌，也不會影響 AI 建議。</p><button id="outcome-current" class="quiet">查看目前局面的實驗估計</button><div id="outcome-result"></div></details>
+  <h3>手牌試算</h3><p class="muted">輸入 16 張待摸或 17 張待打的暗手；每有一組固定面子，暗手少三張。按下牌面可加入目前選定的欄位。</p>
+  <form id="hand-form">
+    <label for="manual-hand">暗手牌</label><textarea id="manual-hand" rows="2" spellcheck="false" placeholder="例：123456m 123p 123789s 67z"></textarea>
+    <div id="tile-palette" class="tile-palette" aria-label="加入牌面"></div>
+    <label for="manual-melds">自己的固定面子（選填；每組以 | 隔開）</label><input id="manual-melds" placeholder="例：123m | 777p | 1111z" autocomplete="off" spellcheck="false">
+    <label for="manual-public">其他已知公開牌（選填）</label><textarea id="manual-public" rows="2" placeholder="四家尚未被拿走的河牌、其他人的公開面子；不要重複自己的暗手及上面的固定面子。" spellcheck="false"></textarea>
+    <p class="muted">m 萬 · p 筒 · s 條 · 1–7z 東南西北中發白。也可用空白分隔「一萬 二萬 東」。此模式計算一般型牌效率；完整的合法動作與 BC 建議請使用牌桌或公開回放。</p>
+    <div class="study-actions"><button type="button" id="use-current" class="quiet">帶入目前手牌</button><button type="button" id="manual-example" class="quiet">填入範例</button><button type="submit" class="primary">比較可打的牌</button></div>
+  </form>
+  <p id="study-status" role="status" aria-live="polite"></p><div id="hand-analysis"></div>
+</dialog>
+</body></html>
